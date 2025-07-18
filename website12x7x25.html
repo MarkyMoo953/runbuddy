@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Location Tracker</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; margin: 0; padding: 0; }
+    body { margin: 0; }
+  #distance {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 1000;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  font-size: 16px;
+  font-weight: bold;
+}
+  </style>
+</head>
+<body>
+
+<div id="distance">Total Distance: 0.00 km</div>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const firebaseUrl = 'https://runbuddy-a7459-default-rtdb.europe-west1.firebasedatabase.app/runner.json';
+  const map = L.map('map').setView([53.3, -6.2], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+  }).addTo(map);
+
+  let markers = [];
+  let polyline;
+
+  function haversineDistance(coords1, coords2) {
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const R = 6371e3; // metres
+    const lat1 = toRad(coords1[0]);
+    const lat2 = toRad(coords2[0]);
+    const deltaLat = toRad(coords2[0] - coords1[0]);
+    const deltaLon = toRad(coords2[1] - coords1[1]);
+
+    const a =
+      Math.sin(deltaLat / 2) ** 2 +
+      Math.cos(lat1) * Math.cos(lat2) *
+      Math.sin(deltaLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  async function updateMap() {
+    try {
+      const res = await fetch(firebaseUrl);
+      const data = await res.json();
+
+      // Clear previous markers
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+
+      if (data) {
+        const points = Object.values(data)
+          .filter(p => p.lat && p.lon)
+          .map(p => [parseFloat(p.lat), parseFloat(p.lon)]);
+
+        // Add markers
+        points.forEach((coords) => {
+          const marker = L.marker(coords).addTo(map);
+          markers.push(marker);
+        });
+
+        // Add polyline
+        if (polyline) map.removeLayer(polyline);
+        polyline = L.polyline(points, { color: 'blue' }).addTo(map);
+
+        if (points.length > 0) map.fitBounds(polyline.getBounds());
+
+        // Calculate total distance
+        let totalDistance = 0;
+        for (let i = 1; i < points.length; i++) {
+          totalDistance += haversineDistance(points[i - 1], points[i]);
+        }
+
+        document.getElementById('distance').innerText =
+          `Total Distance: ${(totalDistance / 1000).toFixed(2)} km`;
+      }
+    } catch (err) {
+      console.error('Failed to fetch data:', err);
+    }
+  }
+
+  setInterval(updateMap, 60000);
+  updateMap();
+</script>
+
+</body>
+</html>
+
