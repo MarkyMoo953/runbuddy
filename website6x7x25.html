@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Location Tracker</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <style>
+    #map { height: 100vh; }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+></script>
+
+<script>
+  // Replace this URL with your Firebase Realtime Database URL
+  const firebaseUrl = 'https://runbuddy-a7459-default-rtdb.europe-west1.firebasedatabase.app/runner.json';
+
+  // Initialize map centered somewhere neutral
+  const map = L.map('map').setView([53.3, -6.2], 13);
+
+  // Add OpenStreetMap tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+  }).addTo(map);
+
+  // Marker variable
+  let marker;
+
+  // Function to fetch data and update marker
+  async function updateLocation() {
+    try {
+      const res = await fetch(firebaseUrl);
+      const data = await res.json();
+
+      if (data && data.lat && data.lon) {
+        const lat = data.lat;
+        const lon = data.lon;
+
+        if (!marker) {
+          marker = L.marker([lat, lon]).addTo(map);
+          map.setView([lat, lon], 15);
+        } else {
+          marker.setLatLng([lat, lon]);
+          map.panTo([lat, lon]);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch location:', err);
+    }
+  }
+
+  // Update every 5 seconds
+  setInterval(updateLocation, 5000);
+
+  // Initial load
+  updateLocation();
+</script>
+
+</body>
+</html>
+

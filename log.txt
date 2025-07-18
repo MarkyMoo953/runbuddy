@@ -1,0 +1,3 @@
+the fitness wearable journey
+1. got an ihpone shortcut to send my location to webhook
+ 
