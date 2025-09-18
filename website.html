@@ -1,31 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Live Location Tracker TEST UPDATE</title>
+  <title>Hermes Tracker</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    #map { height: 100vh; margin: 0; padding: 0; }
-    body { margin: 0; }
-  #distance {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  z-index: 1000;
-  background: white;
-  padding: 8px 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  font-size: 16px;
-  font-weight: bold;
-}
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f7f7f7;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      background: #fff;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    #map {
+      flex: 1;
+      border-radius: 12px;
+      margin: 1rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+    }
+
+    #distance {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 10px 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    footer {
+      background: #fff;
+      padding: 0.8rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #777;
+      box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+    }
   </style>
 </head>
 <body>
 
-<div id="distance">Total Distance: 0.00 km</div>
+<header>
+  Hermes Tracker
+</header>
+
 <div id="map"></div>
+<div id="distance">Total Distance: 0.00 km</div>
+
+<footer>
+  Hermes Project © 2025
+</footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -100,4 +141,3 @@
 
 </body>
 </html>
-
