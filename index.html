@@ -81,6 +81,7 @@
   let markers = [];
   let polyline;
 
+  // Distance function
   function haversineDistance(coords1, coords2) {
     const toRad = (deg) => (deg * Math.PI) / 180;
     const R = 6371e3; // metres
@@ -97,6 +98,14 @@
     return R * c;
   }
 
+  // Custom circular marker
+  const customIcon = L.divIcon({
+    className: "custom-marker",
+    html: '<div style="width:12px;height:12px;background:black;border:2px solid white;border-radius:50%;"></div>',
+    iconSize: [12, 12],
+    iconAnchor: [6, 6]
+  });
+
   async function updateMap() {
     try {
       const res = await fetch(firebaseUrl);
@@ -111,15 +120,20 @@
           .filter(p => p.lat && p.lon)
           .map(p => [parseFloat(p.lat), parseFloat(p.lon)]);
 
-        // Add markers
+        // Add custom markers
         points.forEach((coords) => {
-          const marker = L.marker(coords).addTo(map);
+          const marker = L.marker(coords, { icon: customIcon }).addTo(map);
           markers.push(marker);
         });
 
-        // Add polyline
+        // Add styled polyline
         if (polyline) map.removeLayer(polyline);
-        polyline = L.polyline(points, { color: 'blue' }).addTo(map);
+        polyline = L.polyline(points, {
+          color: "white",
+          weight: 4,
+          opacity: 0.8,
+          lineJoin: "round"
+        }).addTo(map);
 
         if (points.length > 0) map.fitBounds(polyline.getBounds());
 
