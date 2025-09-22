@@ -106,6 +106,45 @@
     iconAnchor: [6, 6]
   });
 
+  // Color interpolation (warm → cold)
+  function interpolateColor(color1, color2, factor) {
+    const c1 = parseInt(color1.slice(1), 16);
+    const c2 = parseInt(color2.slice(1), 16);
+
+    const r1 = (c1 >> 16) & 0xff;
+    const g1 = (c1 >> 8) & 0xff;
+    const b1 = c1 & 0xff;
+
+    const r2 = (c2 >> 16) & 0xff;
+    const g2 = (c2 >> 8) & 0xff;
+    const b2 = c2 & 0xff;
+
+    const r = Math.round(r1 + factor * (r2 - r1));
+    const g = Math.round(g1 + factor * (g2 - g1));
+    const b = Math.round(b1 + factor * (b2 - b1));
+
+    return `rgb(${r},${g},${b})`;
+  }
+
+  function drawGradientRoute(points) {
+    if (polyline) map.removeLayer(polyline); // clear old route
+
+    const startColor = "#ff4500"; // warm (orange-red)
+    const endColor = "#1e90ff";   // cold (dodger blue)
+
+    for (let i = 1; i < points.length; i++) {
+      const factor = i / (points.length - 1);
+      const color = interpolateColor(startColor, endColor, factor);
+
+      L.polyline([points[i - 1], points[i]], {
+        color: color,
+        weight: 4,
+        opacity: 0.9,
+        lineJoin: "round"
+      }).addTo(map);
+    }
+  }
+
   async function updateMap() {
     try {
       const res = await fetch(firebaseUrl);
@@ -126,16 +165,11 @@
           markers.push(marker);
         });
 
-        // Add styled polyline
-        if (polyline) map.removeLayer(polyline);
-        polyline = L.polyline(points, {
-          color: "black",
-          weight: 4,
-          opacity: 0.8,
-          lineJoin: "round"
-        }).addTo(map);
-
-        if (points.length > 0) map.fitBounds(polyline.getBounds());
+        // Draw gradient route
+        if (points.length > 1) {
+          drawGradientRoute(points);
+          map.fitBounds(L.polyline(points).getBounds());
+        }
 
         // Calculate total distance
         let totalDistance = 0;
