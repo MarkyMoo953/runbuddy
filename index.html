@@ -98,15 +98,7 @@
     return R * c;
   }
 
-  // Custom circular marker
-  const customIcon = L.divIcon({
-    className: "custom-marker",
-    html: '<div style="width:12px;height:12px;background:black;border:2px solid white;border-radius:50%;"></div>',
-    iconSize: [12, 12],
-    iconAnchor: [6, 6]
-  });
-
-  // Color interpolation (warm → cold)
+  // Color interpolation (cold → warm)
   function interpolateColor(color1, color2, factor) {
     const c1 = parseInt(color1.slice(1), 16);
     const c2 = parseInt(color2.slice(1), 16);
@@ -126,25 +118,6 @@
     return `rgb(${r},${g},${b})`;
   }
 
-  function drawGradientRoute(points) {
-    if (polyline) map.removeLayer(polyline); // clear old route
-
-    const startColor = "#ff4500"; // warm (orange-red)
-    const endColor = "#1e90ff";   // cold (dodger blue)
-
-    for (let i = 1; i < points.length; i++) {
-      const factor = i / (points.length - 1);
-      const color = interpolateColor(startColor, endColor, factor);
-
-      L.polyline([points[i - 1], points[i]], {
-        color: color,
-        weight: 4,
-        opacity: 0.9,
-        lineJoin: "round"
-      }).addTo(map);
-    }
-  }
-
   async function updateMap() {
     try {
       const res = await fetch(firebaseUrl);
@@ -159,17 +132,35 @@
           .filter(p => p.lat && p.lon)
           .map(p => [parseFloat(p.lat), parseFloat(p.lon)]);
 
-        // Add custom markers
-        points.forEach((coords) => {
-          const marker = L.marker(coords, { icon: customIcon }).addTo(map);
+        // Add polyline (black route)
+        if (polyline) map.removeLayer(polyline);
+        polyline = L.polyline(points, {
+          color: "black",
+          weight: 4,
+          opacity: 0.9,
+          lineJoin: "round"
+        }).addTo(map);
+
+        // Add gradient markers
+        const startColor = "#1e90ff"; // cold (blue)
+        const endColor = "#ff4500";   // warm (orange-red)
+
+        points.forEach((coords, i) => {
+          const factor = i / (points.length - 1);
+          const color = interpolateColor(startColor, endColor, factor);
+
+          const icon = L.divIcon({
+            className: "custom-marker",
+            html: `<div style="width:12px;height:12px;background:${color};border:2px solid white;border-radius:50%;"></div>`,
+            iconSize: [12, 12],
+            iconAnchor: [6, 6]
+          });
+
+          const marker = L.marker(coords, { icon: icon }).addTo(map);
           markers.push(marker);
         });
 
-        // Draw gradient route
-        if (points.length > 1) {
-          drawGradientRoute(points);
-          map.fitBounds(L.polyline(points).getBounds());
-        }
+        if (points.length > 0) map.fitBounds(polyline.getBounds());
 
         // Calculate total distance
         let totalDistance = 0;
